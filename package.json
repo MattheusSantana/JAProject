@@ -5,7 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index"
   },
   "repository": {
     "type": "git",
@@ -18,6 +20,7 @@
   },
   "homepage": "https://github.com/MattheusSantana/JAProject#readme",
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "nodemon": "^2.0.22"
   }
 }
