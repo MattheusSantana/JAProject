@@ -38,4 +38,38 @@ const getProject = async (req, res) => {
     return res.send(projects);
 }
 
-module.exports = {createProject, getProject};
+
+const finishProject = async (req, res) => {
+    try {
+        const { username } = req.headers;
+        const { id } = req.params;
+
+
+        const project = await Project.findByPk(id);
+        
+        if (!project){
+            return res.status(400).json({message: "Project not found"});
+        }
+
+        if (!id || !username) {
+            return res
+            .status(400)
+            .json({ message: "Please submit id and username!" });
+        }
+    
+        await Project.update(
+            {done: true},
+            {where: {id}}
+        );
+    
+        return res.status(201).json({
+          message: "Project updated successfully"
+        });
+      } catch (error) {
+        res.status(500).send({ message: error.message });
+      }
+    
+} 
+
+
+module.exports = {createProject, getProject, finishProject};
