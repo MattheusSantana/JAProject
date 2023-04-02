@@ -25,4 +25,17 @@ const createProject = async (req, res) => {
 
 };
 
-module.exports = createProject;
+const getProject = async (req, res) => {
+    const { username } = req.headers;
+    
+    const userAlreadyExists = await User.findOne({ where: {username }});
+    if (!userAlreadyExists) {
+        return res.status(400).json({message: "User does not exists"});
+    }
+
+    const projects = await Project.findAll({where: {user_name: username }});
+
+    return res.send(projects);
+}
+
+module.exports = {createProject, getProject};
