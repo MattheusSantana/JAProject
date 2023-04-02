@@ -3,9 +3,10 @@ const { User } = require('../models');
 const createUser = async (req, res) => {
     const { name, username, password } = req.body;
 
-    const userAlreadyExists = User.findOne({ where: { username }});
+    const userAlreadyExists = await User.findOne({ where: { username }});
     
     if (userAlreadyExists) {
+        console.log("userAlreadyExists", userAlreadyExists);
         return res.status(400).json({message: "User already exists"});
     }
 
