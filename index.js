@@ -11,8 +11,8 @@ dotenv.config();
 
 app.use(bodyparser.json())
 app.use(bodyparser.urlencoded({ extended: true }))
+app.use(cors())
 app.use(routes);
 // app.use(express.json());
-app.use(cors())
 
 app.listen(port, () => console.log("Server running"));
