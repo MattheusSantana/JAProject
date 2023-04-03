@@ -100,6 +100,10 @@ const finishProject = async (req, res) => {
       return res.status(400).json({ message: "Project not found" });
     }
 
+    if (project.user_name !== username) {
+        return res.status(401).json({ message: "Unauthorized" });
+  }
+
     await Project.update({ done: true }, { where: { id } });
 
     return res.status(201).json({
@@ -114,31 +118,23 @@ const updateProject = async (req, res) => {
   try {
     const { title, cost, deadline, zip_code } = req.body;
     const { username } = req.headers;
+    const { id } = req.params;
+
+
     if (!title && !cost && !deadline && !zip_code) {
       res
         .status(400)
         .json({ message: "Please submit  at least one field for update!" });
     }
 
-    if (!username) {
-      return res.status(400).send({ message: "user not found!" });
-    }
-
-    const { id } = req.params;
-    if (!id) {
-      return res.status(400).send({ message: "Project Not found" });
+    if (!username || !id) {
+      return res.status(400).send({ message: "please submit username and id" });
     }
 
     const project = await Project.findOne({ where: { id } });
 
     if (!project) {
       return res.status(400).send({ message: "project not found!" });
-    }
-
-    const userExists = await User.findOne({ where: { username } });
-
-    if (!userExists) {
-      return res.status(400).json({ message: "User does not exists" });
     }
 
     if (project.user_name !== username) {
