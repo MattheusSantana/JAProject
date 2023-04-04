@@ -58,15 +58,14 @@ const getProject = async (req, res) => {
         .json({ message: "Please submit id and username!" });
     }
 
-    const userAlreadyExists = await User.findOne({ where: { username } });
-    if (!userAlreadyExists) {
-      return res.status(400).json({ message: "User does not exists" });
-    }
-
     let project = await Project.findByPk(id);
 
     if (!project) {
       return res.status(400).send({ message: "Project not found" });
+    }
+
+    if (project.user_name !== username) {
+        return res.status(401).json({ message: "Unauthorized" });
     }
 
     const { country, city, state } = getLocation(project.zip_code);
@@ -102,7 +101,7 @@ const finishProject = async (req, res) => {
 
     if (project.user_name !== username) {
         return res.status(401).json({ message: "Unauthorized" });
-  }
+    }
 
     await Project.update({ done: true }, { where: { id } });
 
