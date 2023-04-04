@@ -21,7 +21,7 @@ const createUser = async (req, res) => {
         password
     });
 
-    return res.status(201).json(createdUser);
+    return res.status(201).json({message: "User created successfully!"});
 
 };
 

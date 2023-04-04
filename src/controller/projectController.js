@@ -1,50 +1,61 @@
 const { Project } = require("../models");
 const { User } = require("../models");
-const zipCode = require("zipcodes");
+const cep = require("cep-promise");
 
 const createProject = async (req, res) => {
-  const { title, zip_code, cost, done, deadline, username } = req.body;
+  try {
+    const { title, zip_code, cost, done, deadline } = req.body;
+    const { username } = req.headers;
 
-  if (!username || !title || !zip_code) {
-    return res
-      .status(400)
-      .send({
+    if (!username) {
+      return res.status(400).json({ message: "Please submit username!" });
+    }
+    
+    if ( !title || !zip_code) {
+      return res.status(400).send({
         message: "Please submit at least username, title and zip code fields!",
       });
+    }
+    const userAlreadyExists = await User.findOne({ where: { username } });
+
+    if (!userAlreadyExists) {
+      return res.status(400).json({ message: "User does not exists" });
+    }
+
+    const createdProject = await Project.create({
+      user_name: username,
+      title,
+      zip_code,
+      cost,
+      done,
+      deadline,
+    });
+
+    return res.status(201).json({ message: "Project created Sucessfully!" });
+  } catch (error) {
+    res.status(400).send({ message: error.message });
   }
-  const userAlreadyExists = await User.findOne({ where: { username } });
-
-  if (!userAlreadyExists) {
-    return res.status(400).json({ message: "User does not exists" });
-  }
-
-  const createdProject = await Project.create({
-    user_name: username,
-    title,
-    zip_code,
-    cost,
-    done,
-    deadline,
-  });
-
-  return res.status(201).json(createdProject);
 };
 
 const getProjects = async (req, res) => {
-  const { username } = req.headers;
+  try {
+    const { username } = req.headers;
 
-  if (!username) {
-    return res.status(400).json({ message: "Please submit username!" });
+    if (!username) {
+      return res.status(400).json({ message: "Please submit username!" });
+    }
+
+    const userAlreadyExists = await User.findOne({ where: { username } });
+    if (!userAlreadyExists) {
+      return res.status(400).json({ message: "User does not exists" });
+    }
+
+    const projects = await Project.findAll({ where: { user_name: username } });
+
+    return res.send(projects);
+  } catch (error) {
+    res.status(400).send({ message: error.message });
   }
-
-  const userAlreadyExists = await User.findOne({ where: { username } });
-  if (!userAlreadyExists) {
-    return res.status(400).json({ message: "User does not exists" });
-  }
-
-  const projects = await Project.findAll({ where: { user_name: username } });
-
-  return res.send(projects);
 };
 
 const getProject = async (req, res) => {
@@ -65,7 +76,7 @@ const getProject = async (req, res) => {
     }
 
     if (project.user_name !== username) {
-        return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     const { country, city, state } = getLocation(project.zip_code);
@@ -100,7 +111,7 @@ const finishProject = async (req, res) => {
     }
 
     if (project.user_name !== username) {
-        return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ message: "Unauthorized" });
     }
 
     await Project.update({ done: true }, { where: { id } });
@@ -118,7 +129,6 @@ const updateProject = async (req, res) => {
     const { title, cost, deadline, zip_code } = req.body;
     const { username } = req.headers;
     const { id } = req.params;
-
 
     if (!title && !cost && !deadline && !zip_code) {
       res
@@ -157,42 +167,54 @@ const updateProject = async (req, res) => {
   }
 };
 
-
-
 const deleteProject = async (req, res) => {
-    try {
-      const { username } = req.headers;
-      const { id } = req.params;
-  
-      if (!id || !username) {
-        return res
-          .status(400)
-          .json({ message: "Please submit id and username!" });
-      }
-      
-      const project = await Project.findByPk(id);
-      
-      if (!project) {
-          return res.status(400).json({ message: "Project not found" });
-      }
-        
-      if (project.user_name !== username) {
-            return res.status(401).json({ message: "Unauthorized" });
-      }
+  try {
+    const { username } = req.headers;
+    const { id } = req.params;
 
-      await Project.destroy({ where: { id }});
-  
-      return res.status(200).json({
-        message: "Project deleted successfully",
-      });
-    } catch (error) {
-      res.status(500).send({ message: error.message });
+    if (!id || !username) {
+      return res
+        .status(400)
+        .json({ message: "Please submit id and username!" });
     }
-  };
 
-const getLocation = (zip_code) => {
-  const { country, city, state } = zipCode.lookup(zip_code);
-  return { country, city, state };
+    const project = await Project.findByPk(id);
+
+    if (!project) {
+      return res.status(400).json({ message: "Project not found" });
+    }
+
+    if (project.user_name !== username) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    await Project.destroy({ where: { id } });
+
+    return res.status(200).json({
+      message: "Project deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).send({ message: error.message });
+  }
+};
+
+const getLocation = async (zipCode) => {
+    let state = '';
+    let city = '';
+
+    
+    try {
+
+        const response = await cep(zipCode);
+        state = response.state;
+        city = response.city;
+        return {state, city};
+    } catch (error) {
+        console.log(error);
+        return {state, city};
+    }
+    
+  
 };
 
 module.exports = {
@@ -201,5 +223,5 @@ module.exports = {
   finishProject,
   updateProject,
   getProject,
-  deleteProject
+  deleteProject,
 };
