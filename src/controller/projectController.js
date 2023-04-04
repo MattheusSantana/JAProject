@@ -1,7 +1,7 @@
+const moment = require('moment');
 const { Project } = require("../models");
 const { User } = require("../models");
 const cep = require("cep-promise");
-
 const createProject = async (req, res) => {
   try {
     const { title, zip_code, cost, done, deadline } = req.body;
@@ -80,7 +80,6 @@ const getProject = async (req, res) => {
     }
 
     const { city, state } = await getLocation(project.zip_code);
-    console.log('aq', city, state );
     project = {
       ...project.dataValues,
       city,
@@ -149,11 +148,17 @@ const updateProject = async (req, res) => {
     if (project.user_name !== username) {
       return res.status(401).json({ message: "Unauthorized" });
     }
+
+    console.log('dead', deadline);
+
+    const newDeadline = moment(deadline).format('YYYY-MM-DD HH:mm:ss');
+    console.log('new', newDeadline);
+
     const projectUpdated = await Project.update(
       {
         title,
         cost,
-        deadline,
+        deadline: newDeadline,
         zip_code,
       },
       { where: { id } }
@@ -203,7 +208,6 @@ const getLocation = async (zipCode) => {
     let city = '';
     try {
         const response = await cep(zipCode);
-        console.log(response.state);
         state = response.state;
         city = response.city;
         return {state, city};
