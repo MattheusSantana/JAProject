@@ -20,3 +20,6 @@ Run all migrations from sequelize
 
 Runs the app in the development mode.\
 Open [http://localhost:4000](http://localhost:4000) to view it in your browser.
+
+
+Here https://github.com/MattheusSantana/ja-front you can run a front-end side to make request on this API. 
