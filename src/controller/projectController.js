@@ -79,10 +79,10 @@ const getProject = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const { country, city, state } = getLocation(project.zip_code);
+    const { city, state } = await getLocation(project.zip_code);
+    console.log('aq', city, state );
     project = {
       ...project.dataValues,
-      country,
       city,
       state,
     };
@@ -201,11 +201,9 @@ const deleteProject = async (req, res) => {
 const getLocation = async (zipCode) => {
     let state = '';
     let city = '';
-
-    
     try {
-
         const response = await cep(zipCode);
+        console.log(response.state);
         state = response.state;
         city = response.city;
         return {state, city};
@@ -213,8 +211,6 @@ const getLocation = async (zipCode) => {
         console.log(error);
         return {state, city};
     }
-    
-  
 };
 
 module.exports = {
